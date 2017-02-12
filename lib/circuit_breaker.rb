@@ -43,7 +43,6 @@ class CircuitBreaker
     yield arg
     reset_failures
   rescue => e
-    puts e
     handle_failure(e)
   end
 
@@ -55,7 +54,7 @@ class CircuitBreaker
   end
 
   def reset_period_lapsed?
-    (Time.now - failures.last.recorded) > reset_timeout
+    (Time.now.utc - failures.last.timestamp) > reset_timeout
   end
 
   def reset_failures
