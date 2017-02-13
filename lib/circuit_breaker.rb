@@ -1,7 +1,6 @@
 require "circuit_breaker/version"
 require "circuit_breaker/failure"
 require 'logger'
-require 'pry'
 
 class CircuitBreaker
   class Open < StandardError; end
@@ -25,7 +24,7 @@ class CircuitBreaker
   end
 
   def failure_count
-    @failures.size
+    failures.size
   end
 
   def open?
@@ -68,7 +67,7 @@ class CircuitBreaker
 
   def handle_failure(e)
     failure = Failure.new(e)
-    @failures << failure
+    failures << failure
     logger.warn failure.to_s
     if half_open? || failures.size >= failure_limit
       @state = :open
