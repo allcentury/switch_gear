@@ -101,9 +101,7 @@ describe CircuitBreaker do
     end
     it 'requires certain methods if using a custom logger' do
       expect {
-        CircuitBreaker.new do |cb|
-          cb.logger = Helpers::DummyLogger
-        end
+        CircuitBreaker.new { |cb| cb.logger = Helpers::DummyLogger }
       }.to raise_error(NotImplementedError)
     end
     it 'logs after a failure' do
