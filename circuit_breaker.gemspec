@@ -30,10 +30,13 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.metadata["yard.run"] = "yri"
+
   spec.add_development_dependency "bundler", "~> 1.13"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "pry", "~> 0.10"
   spec.add_development_dependency "timecop", "~> 0.8"
   spec.add_development_dependency "simplecov", "~> 0.13"
+  spec.add_development_dependency "yard", "~> 0.9"
 end
