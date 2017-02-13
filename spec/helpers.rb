@@ -7,7 +7,7 @@ module Helpers
   def open_then_close_breaker(breaker)
     failure_limit.times { |i| breaker.call(failure) }
     expect(breaker.open?).to eq true
-    sleep breaker.reset_timeout
+    Timecop.travel(breaker.reset_timeout)
     breaker.call(success)
   end
   class DummyLogger; end

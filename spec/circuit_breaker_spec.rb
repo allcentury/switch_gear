@@ -48,6 +48,7 @@ describe CircuitBreaker do
     end
     it 'resets when a failure has passed reset_timeout' do
       # breaker will allow calls again after 0.5 second
+      Timecop.freeze(Time.now)
       reset_timeout = 0.5
       breaker = CircuitBreaker.new do |cb|
         cb.circuit = -> (arg) { service(arg) }
@@ -57,7 +58,7 @@ describe CircuitBreaker do
 
       failure_limit.times { breaker.call(failure) }
       expect(breaker.open?).to eq true
-      sleep reset_timeout
+      Timecop.travel(reset_timeout)
 
       # try again without a failure
       breaker.call(success)
@@ -69,6 +70,7 @@ describe CircuitBreaker do
   describe 'state half open' do
     before(:each) do
       # breaker will allow calls again after 0.5 second
+      Timecop.freeze(Time.now)
       reset_timeout = 0.5
       @breaker = CircuitBreaker.new do |cb|
         cb.circuit = -> (arg) { service(arg) }
@@ -78,7 +80,7 @@ describe CircuitBreaker do
 
       failure_limit.times { |i| @breaker.call(failure) }
       expect(@breaker.open?).to eq true
-      sleep reset_timeout
+      Timecop.travel(reset_timeout)
     end
     it 'changes state to half open when reset_timeout is exceeded' do
       # we don't want to check the value of state before #reset_failure is called
