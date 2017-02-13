@@ -8,7 +8,7 @@ class CircuitBreaker
   attr_reader :failures, :state
   attr_accessor :circuit, :failure_limit, :reset_timeout, :logger
 
-  # The main class to instantiate the CircuitBraker class.
+  # The main class to instantiate the CircuitBreaker class.
   #
   # @example create a new breaker
   #   breaker = CircuitBreaker.new do |cb|
