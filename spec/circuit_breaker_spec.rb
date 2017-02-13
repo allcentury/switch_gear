@@ -1,13 +1,9 @@
 require "spec_helper"
 
-def service(arg)
-  raise arg if arg.is_a? StandardError
-  arg
-end
-
 describe CircuitBreaker do
   let(:failure_limit) { 2 }
-  let(:failure) { StandardError.new }
+  let(:failure_msg) { "Remote system unavailable" }
+  let(:failure) { StandardError.new(failure_msg) }
   let(:success) { "success" }
   let(:breaker) do
     CircuitBreaker.new do |cb|
@@ -25,7 +21,7 @@ describe CircuitBreaker do
       expect(breaker.failure_count).to eq 1
     end
 
-    it 'will not make calls when failure limit is reached' do
+    it 'will not make calls and raise an error when failure limit is reached' do
       failure_limit.times { breaker.call(failure) }
 
       expect(breaker.failure_count).to eq failure_limit
@@ -94,6 +90,35 @@ describe CircuitBreaker do
     it 'changes back to open after a successful call' do
       @breaker.call(success)
       expect(@breaker.closed?).to eq true
+    end
+  end
+  describe 'logging' do
+    let(:log_message) { "[StandardError] - #{failure_msg}" }
+    it 'defaults to ruby logger' do
+      expect(breaker.logger).to be_a Logger
+    end
+    it 'requires certain methods if using a custom logger' do
+      expect {
+        CircuitBreaker.new do |cb|
+          cb.logger = Helpers::DummyLogger
+        end
+      }.to raise_error(NotImplementedError)
+    end
+    it 'logs after a failure' do
+      expect(breaker.logger).to receive(:warn).with(log_message)
+      breaker.call(failure)
+    end
+    it 'logs when the circuit resets' do
+      reset_timeout = 0.5
+      breaker = CircuitBreaker.new do |cb|
+        cb.circuit = -> (arg) { service(arg) }
+        cb.failure_limit = failure_limit
+        cb.reset_timeout = reset_timeout
+      end
+      msg = "Circuit closed"
+
+      expect(breaker.logger).to receive(:info).with(msg)
+      open_then_close_breaker(breaker)
     end
   end
 end

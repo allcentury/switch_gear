@@ -1,18 +1,21 @@
 require "circuit_breaker/version"
 require "circuit_breaker/failure"
+require 'logger'
 require 'pry'
 
 class CircuitBreaker
   class Open < StandardError; end
 
   attr_reader :failures, :state
-  attr_accessor :circuit, :failure_limit, :reset_timeout
+  attr_accessor :circuit, :failure_limit, :reset_timeout, :logger
 
   def initialize(&block)
     yield self
     @failures = []
     @state = :closed
     @reset_timeout ||= 10
+    @logger ||= Logger.new(STDOUT)
+    run_validations
   end
 
   def call(arg)
@@ -60,14 +63,23 @@ class CircuitBreaker
   def reset_failures
     @failures = []
     @state = :closed
+    logger.info "Circuit closed"
   end
 
   def handle_failure(e)
-    @failures << Failure.new(e)
+    failure = Failure.new(e)
+    @failures << failure
+    logger.warn failure.to_s
     if half_open? || failures.size >= failure_limit
       @state = :open
     else
       @state = :closed
+    end
+  end
+
+  def run_validations
+    if ![:debug, :info, :warn, :error].all? { |e| logger.respond_to?(e) }
+      raise NotImplementedError
     end
   end
 end
