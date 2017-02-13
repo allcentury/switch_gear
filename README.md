@@ -1,22 +1,18 @@
 # CircuitBreaker
 
-A lightweight ruby gem that implements the famous Michael Nygard circuit breaker pattern.
+A lightweight ruby gem that implements the famous [Michael Nygard](https://www.martinfowler.com/bliki/CircuitBreaker.html) circuit breaker pattern.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'circuit_breaker'
+gem 'circuit_breaker', :github => 'allcentury/circuit_breaker'
 ```
 
 And then execute:
 
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install circuit_breaker
+    $ bundle install
 
 ## Usage
 
