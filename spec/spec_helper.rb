@@ -3,6 +3,7 @@ require "circuit_breaker"
 require_relative "helpers"
 require 'timecop'
 require 'simplecov'
+require 'pry'
 SimpleCov.start
 
 RSpec.configure do |c|

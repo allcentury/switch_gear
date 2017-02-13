@@ -28,6 +28,10 @@ describe CircuitBreaker do
       it 'sets a reset timeout of 10 seconds' do
         expect(breaker.reset_timeout).to eq 10
       end
+      it 'works with any number of arguments' do
+        breaker = CircuitBreaker.new { |cb| cb.circuit = -> (a1, a2) { a1 + a2 } }
+        expect { breaker.call(1,2) }.to_not raise_error
+      end
       describe "validations" do
         it 'requires logging level methods if using a custom logger' do
           expect {

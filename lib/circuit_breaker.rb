@@ -17,10 +17,10 @@ class CircuitBreaker
     run_validations
   end
 
-  def call(arg)
+  def call(*args)
     check_reset_timeout
     raise Open if open?
-    do_run(arg, &circuit)
+    do_run(args, &circuit)
   end
 
   def failure_count
@@ -41,8 +41,8 @@ class CircuitBreaker
 
   private
 
-  def do_run(arg)
-    yield arg
+  def do_run(args)
+    yield *args
     reset_failures
   rescue => e
     handle_failure(e)
