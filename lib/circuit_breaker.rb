@@ -78,8 +78,12 @@ class CircuitBreaker
   end
 
   def run_validations
-    if ![:debug, :info, :warn, :error].all? { |e| logger.respond_to?(e) }
-      raise NotImplementedError
+    logger_methods = [:debug, :info, :warn, :error]
+    if !logger_methods.all? { |e| logger.respond_to?(e) }
+      raise NotImplementedError.new("Your logger must respond to #{logger_methods}")
+    end
+    if !circuit.respond_to?(:call)
+      raise NotImplementedError.new("Your circuit must respond to #call")
     end
   end
 end

@@ -15,6 +15,37 @@ describe CircuitBreaker do
     expect(CircuitBreaker::VERSION).not_to be nil
   end
 
+  describe "intializer" do
+    describe "defaults" do
+      let(:breaker) do
+        CircuitBreaker.new do |cb|
+          cb.circuit = -> (arg) { service(arg) }
+        end
+      end
+      it 'defaults to ruby logger' do
+        expect(breaker.logger).to be_a Logger
+      end
+      it 'sets a reset timeout of 10 seconds' do
+        expect(breaker.reset_timeout).to eq 10
+      end
+      describe "validations" do
+        it 'requires logging level methods if using a custom logger' do
+          expect {
+            CircuitBreaker.new do |cb|
+              cb.circuit = -> { }
+              cb.logger = Helpers::DummyLogger
+            end
+          }.to raise_error(NotImplementedError, "Your logger must respond to [:debug, :info, :warn, :error]")
+        end
+        it 'requires the circuit be callable' do
+          expect {
+            CircuitBreaker.new { |cb| cb.circuit = :some_method }
+          }.to raise_error(NotImplementedError, "Your circuit must respond to #call")
+        end
+      end
+    end
+  end
+
   describe 'failed calls' do
     it "records failures" do
       breaker.call(failure)
@@ -33,12 +64,12 @@ describe CircuitBreaker do
   describe 'resetting' do
     let(:breaker) do
       CircuitBreaker.new do |cb|
+        cb.circuit = -> (arg) { service(arg) }
         cb.failure_limit = failure_limit
       end
     end
     it 'resets failures when successful' do
       # fail once
-      breaker.circuit = -> (arg) { service(arg) }
       breaker.call(failure)
       # succeed
       breaker.call(true)
@@ -96,14 +127,6 @@ describe CircuitBreaker do
   end
   describe 'logging' do
     let(:log_message) { "[StandardError] - #{failure_msg}" }
-    it 'defaults to ruby logger' do
-      expect(breaker.logger).to be_a Logger
-    end
-    it 'requires certain methods if using a custom logger' do
-      expect {
-        CircuitBreaker.new { |cb| cb.logger = Helpers::DummyLogger }
-      }.to raise_error(NotImplementedError)
-    end
     it 'logs after a failure' do
       expect(breaker.logger).to receive(:warn).with(log_message)
       breaker.call(failure)
