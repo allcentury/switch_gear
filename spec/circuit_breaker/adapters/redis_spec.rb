@@ -62,5 +62,15 @@ describe CircuitBreaker::Adapters::Redis do
       breaker.call(success)
     end
   end
+  it 'defaults state if not present in redis' do
+    expect(client).to receive(:get).with(state_namespace).and_return(nil)
+    expect(client).to receive(:set).with(state_namespace, closed)
+    expect(breaker.closed?).to eq true
+  end
+  it 'defaults failures if not present in redis' do
+    expect(client).to receive(:del).exactly(2).with(fail_namespace)
+    expect(client).to receive(:smembers).exactly(2).with(fail_namespace).and_return(nil)
+    expect(breaker.failure_count).to eq 0
+    expect(breaker.failures).to eq []
+  end
 end
-

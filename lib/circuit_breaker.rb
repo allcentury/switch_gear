@@ -29,6 +29,7 @@ class CircuitBreaker
   # @return [CircuitBreaker] the object.
   def initialize(&block)
     yield self
+    @adapter ||= :memory
     @adapter = build_from(adapter, adapter_client, adapter_namespace)
     @failure_limit ||= 5
     @reset_timeout ||= 10
@@ -48,7 +49,7 @@ class CircuitBreaker
 
   # @return [Integer] The count of current failures
   def failure_count
-    adapter.failures.size
+    failures.size
   end
 
   # @return [Boolean] Whether the circuit is open
@@ -64,6 +65,11 @@ class CircuitBreaker
   # @return [Boolean] Whether the circuit is half-open
   def half_open?
     adapter.state == :half_open
+  end
+
+  # @return [Array<CircuitBreaker::Failure>] a list of current failures
+  def failures
+    adapter.failures
   end
 
   private

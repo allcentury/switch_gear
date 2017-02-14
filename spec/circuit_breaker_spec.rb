@@ -28,6 +28,9 @@ describe CircuitBreaker do
         breaker = CircuitBreaker.new { |cb| cb.circuit = -> (a1, a2) { a1 + a2 } }
         expect { breaker.call(1,2) }.to_not raise_error
       end
+      it "defaults to the memory adapter" do
+        expect(breaker.adapter).to be_a CircuitBreaker::Adapters::Memory
+      end
       describe "validations" do
         it 'requires logging level methods if using a custom logger' do
           expect {
@@ -144,4 +147,22 @@ describe CircuitBreaker do
       open_then_close_breaker(breaker)
     end
   end
+  describe 'adapters' do
+    it "instantiates with the redis adapter" do
+      breaker = CircuitBreaker.new do |cb|
+        cb.circuit = -> {}
+        cb.adapter = :redis
+        cb.adapter_client = double('client')
+        cb.adapter_namespace = 'namespace'
+      end
+      expect(breaker.adapter).to be_a CircuitBreaker::Adapters::Redis
+    end
+    it "instantiates with memory adapter" do
+      breaker = CircuitBreaker.new do |cb|
+        cb.circuit = -> {}
+        cb.adapter = :memory
+      end
+      expect(breaker.adapter).to be_a CircuitBreaker::Adapters::Memory
+    end
   end
+end

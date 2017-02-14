@@ -10,6 +10,7 @@ class CircuitBreaker
       def state
         redis_state = client.get(state_namespace)
         return redis_state.to_sym if redis_state
+        self.state = :closed
       end
 
       def state=(state)
@@ -19,14 +20,19 @@ class CircuitBreaker
       def failures
         redis_fails = client.smembers(fail_namespace)
         return redis_fails.map { |f| Failure.from_json(f) } if redis_fails
+        self.failures = []
+        []
       end
 
       def add_failure(failure)
         client.sadd(fail_namespace, failure.to_json)
       end
 
+      # failures= requires we replace what is currently in redis
+      # with the new value so we delete all entries first then add
       def failures=(failures)
         client.del(fail_namespace)
+        failures.each { |f| client.sadd(fail_namespace, f.to_json) }
       end
 
       private
