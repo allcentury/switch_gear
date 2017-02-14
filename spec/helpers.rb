@@ -27,5 +27,9 @@ module Helpers
     "success"
   end
 
+  def error_class
+    failure.class.to_s
+  end
+
   class DummyLogger; end
 end

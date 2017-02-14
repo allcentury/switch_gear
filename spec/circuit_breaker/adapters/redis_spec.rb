@@ -21,6 +21,14 @@ describe CircuitBreaker::Adapters::Redis do
   end
   describe 'writes and reads' do
     let(:timestamp) { "2017-02-13 23:31:31 UTC" }
+    let(:failure_json) do
+      { error: error_class, message: failure_msg, timestamp: timestamp }.to_json
+    end
+    before(:each) do
+      time = Time.now.utc
+      Timecop.freeze(time)
+      @new_error = { error: error_class, message: failure_msg, timestamp: time }.to_json
+    end
     it 'holds state in redis' do
       expect(client).to receive(:get).exactly(3).with(state_namespace).and_return(closed)
       # this gets called after a successful call
@@ -32,12 +40,10 @@ describe CircuitBreaker::Adapters::Redis do
     end
     it 'holds failures in redis' do
       expect(client).to receive(:get).exactly(3).with(state_namespace).and_return(closed)
-      time = Time.now.utc
-      Timecop.freeze(time)
-      expect(client).to receive(:smembers).with(fail_namespace).and_return([{error: "StandardError", timestamp: timestamp}.to_json])
+      expect(client).to receive(:smembers).with(fail_namespace).and_return([failure_json])
 
       # this gets called after a failed call
-      expect(client).to receive(:sadd).with(fail_namespace, { error: "StandardError", timestamp: time }.to_json)
+      expect(client).to receive(:sadd).with(fail_namespace, @new_error)
       expect(client).to receive(:set).with(state_namespace, open)
       breaker.call(failure)
     end
@@ -45,8 +51,8 @@ describe CircuitBreaker::Adapters::Redis do
       expect(client).to receive(:get).exactly(5).with(state_namespace).and_return(closed)
       time = Time.now.utc
       Timecop.freeze(time)
-      expect(client).to receive(:sadd).with(fail_namespace, { error: "StandardError", timestamp: time }.to_json)
-      expect(client).to receive(:smembers).with(fail_namespace).and_return([{error: "StandardError", timestamp: timestamp}.to_json])
+      expect(client).to receive(:sadd).with(fail_namespace, @new_error)
+      expect(client).to receive(:smembers).with(fail_namespace).and_return([failure_json])
       expect(client).to receive(:set).with(state_namespace, open)
       breaker.call(failure)
       Timecop.travel(breaker.reset_timeout)
