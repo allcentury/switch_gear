@@ -25,6 +25,9 @@ class CircuitBreaker
   # @yieldparam failure_limit [Integer] The maximum amount of failures you'll tolerate in a row before the breaker is tripped. Defaults to 5.
   # @yieldparam reset_timeout [Integer] The amount of time before the breaker should move back to closed after the last failure.  For instance if you set this to 5, the breaker is callable again 5+ seconds after the last failure.  Defaults to 10 seconds
   # @yieldparam logger [Logger] A logger instance of your choosing.  Defaults to ruby's std logger.
+  # @yieldparam adapter [Symbol] Which adapter to use,  ie `:redis` or `:memory`. Default is :memory
+  # @yieldparam adapter_client [Object] - an instance of an adapter client.  This library does not have a hard dependency on a particular redis client but for testing I've used [redis-rb](https://github.com/redis/redis-rb).  Whatever you pass in here simply has to implement a few redis commands such as `sadd`, `del`, `smembers`, `get` and `set`.  The client will ensure these exist before the breaker can be instantiated.
+  # @yieldparam adapter_namespace [String] A unique name that will be used across servers to sync `state` and `failures`.  I'd recommend `your_class.name}:some_method` or whatever is special about what's being invoked in the `circuit`.
   #
   # @return [CircuitBreaker] the object.
   def initialize(&block)
