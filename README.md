@@ -67,11 +67,13 @@ is 5+ seconds after the last error which exceeds the `reset_timeout` - that's wh
 
 ### Redis
 
-In an distributed environment the in memory solution of the circuit breaker creates quite a bit of unnecessary work.  If you can imagine 5 servers all running their own circuit breakers, the `failure_limit` has just increased by 5. Ideally, we want server1's failures and server2's failures to be included for similar breakers.  We do this by using redis where the state of the breaker and the failures are persisted.  Redis is a great choice for this especially since most distributed systems have a redis instance in use.  You can set up the `CircuitBreaker` to use the redis adapter like this:
+In an distributed environment the in memory solution of the circuit breaker creates quite a bit of unnecessary work.  If you can imagine 5 servers all running their own circuit breakers, the `failure_limit` has just increased by 5. Ideally, we want server1's failures and server2's failures to be included for similar breakers.  We do this by using redis where the state of the breaker and the failures are persisted.  Redis is a great choice for this especially since most distributed systems have a redis instance in use.
 
 You can visualize a few servers that were originally in a closed state moving to open upon failures as such:
 
 ![img](https://s3.postimg.org/stxckap03/ezgif_com_video_to_gif.gif)
+
+You can set up the `CircuitBreaker` to use the redis adapter like this:
 
 ```ruby
 breaker = CircuitBreaker.new do |cb|
