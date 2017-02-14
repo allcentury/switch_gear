@@ -1,8 +1,16 @@
+require 'json'
 class CircuitBreaker
   class Failure
-    def initialize(error)
+    def self.from_json(json)
+      failure = JSON.parse(json)
+      error = Object.const_get(failure["error"])
+      error = error.new(failure["message"])
+      new(error, Time.parse(failure["timestamp"]))
+    end
+
+    def initialize(error, recorded = Time.now.utc)
       @error = error
-      @recorded = Time.now.utc
+      @recorded = recorded
     end
 
     def timestamp
@@ -11,6 +19,14 @@ class CircuitBreaker
 
     def to_s
       "[#{error.class}] - #{error.message}"
+    end
+
+    def to_json
+      JSON.generate({
+        error: error.class,
+        message: error.message,
+        timestamp: timestamp.to_s
+      })
     end
 
     private

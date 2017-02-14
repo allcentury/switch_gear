@@ -1,5 +1,7 @@
 require 'circuit_breaker'
 require 'logger'
+require 'redis'
+require 'pry'
 
 @logger = Logger.new(STDOUT)
 
@@ -11,8 +13,13 @@ def get_tweets(twitter_handle, num)
   @logger.info "#{http_result} getting tweets for #{twitter_handle}"
 end
 
+redis = Redis.new
+
 breaker = CircuitBreaker.new do |cb|
   cb.circuit = -> (twitter_handle, num) { get_tweets(twitter_handle, num) }
+  cb.adapter = :redis
+  cb.adapter_client = redis
+  cb.adapter_namespace = "get_tweets"
   cb.failure_limit = 2
   cb.reset_timeout = 5
 end

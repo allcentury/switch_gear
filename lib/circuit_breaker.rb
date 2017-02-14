@@ -1,12 +1,16 @@
 require "circuit_breaker/version"
 require "circuit_breaker/failure"
+require 'circuit_breaker/adapters'
+require 'circuit_breaker/adapters/memory'
+require 'circuit_breaker/adapters/redis'
 require 'logger'
 
 class CircuitBreaker
+  include Adapters
   class Open < StandardError; end
 
   attr_reader :failures, :state
-  attr_accessor :circuit, :failure_limit, :reset_timeout, :logger
+  attr_accessor :circuit, :failure_limit, :reset_timeout, :logger, :adapter, :adapter_client, :adapter_namespace
 
   # The main class to instantiate the CircuitBraker class.
   #
@@ -25,8 +29,7 @@ class CircuitBreaker
   # @return [CircuitBreaker] the object.
   def initialize(&block)
     yield self
-    @failures = []
-    @state = :closed
+    @adapter = build_from(adapter, adapter_client, adapter_namespace)
     @failure_limit ||= 5
     @reset_timeout ||= 10
     @logger ||= Logger.new(STDOUT)
@@ -45,22 +48,22 @@ class CircuitBreaker
 
   # @return [Integer] The count of current failures
   def failure_count
-    failures.size
+    adapter.failures.size
   end
 
   # @return [Boolean] Whether the circuit is open
   def open?
-    state == :open
+    adapter.state == :open
   end
 
   # @return [Boolean] Whether the circuit is closed
   def closed?
-    state == :closed
+    adapter.state == :closed
   end
 
   # @return [Boolean] Whether the circuit is half-open
   def half_open?
-    state == :half_open
+    adapter.state == :half_open
   end
 
   private
@@ -75,28 +78,28 @@ class CircuitBreaker
   def check_reset_timeout
     return if !open?
     if reset_period_lapsed?
-      @state = :half_open
+      adapter.state = :half_open
     end
   end
 
   def reset_period_lapsed?
-    (Time.now.utc - failures.last.timestamp) > reset_timeout
+    (Time.now.utc - adapter.failures.last.timestamp) > reset_timeout
   end
 
   def reset_failures
-    @failures = []
-    @state = :closed
+    adapter.failures = []
+    adapter.state = :closed
     logger.info "Circuit closed"
   end
 
   def handle_failure(e)
     failure = Failure.new(e)
-    failures << failure
+    adapter.add_failure(failure)
     logger.warn failure.to_s
-    if half_open? || failures.size >= failure_limit
-      @state = :open
+    if half_open? || adapter.failures.size >= failure_limit
+      adapter.state = :open
     else
-      @state = :closed
+      adapter.state = :closed
     end
   end
 

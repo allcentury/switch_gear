@@ -10,5 +10,22 @@ module Helpers
     Timecop.travel(breaker.reset_timeout)
     breaker.call(success)
   end
+
+  def failure_limit
+    2
+  end
+
+  def failure
+    StandardError.new(failure_msg)
+  end
+
+  def failure_msg
+    "Remote system unavailable"
+  end
+
+  def success
+    "success"
+  end
+
   class DummyLogger; end
 end

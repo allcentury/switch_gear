@@ -1,10 +1,6 @@
 require "spec_helper"
 
 describe CircuitBreaker do
-  let(:failure_limit) { 2 }
-  let(:failure_msg) { "Remote system unavailable" }
-  let(:failure) { StandardError.new(failure_msg) }
-  let(:success) { "success" }
   let(:breaker) do
     CircuitBreaker.new do |cb|
       cb.circuit = -> (arg) { service(arg) }
@@ -148,4 +144,4 @@ describe CircuitBreaker do
       open_then_close_breaker(breaker)
     end
   end
-end
+  end
