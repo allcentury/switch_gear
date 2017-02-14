@@ -16,6 +16,12 @@ describe CircuitBreaker::Adapters::Redis do
       cb.adapter_namespace = namespace
     end
   end
+  before(:each) do
+    redis_commands = [:smembers, :get, :set, :sadd, :del]
+    redis_commands.each do |c|
+      allow(client).to receive(:respond_to?).with(c).and_return(true)
+    end
+  end
   it 'registers the right adapter' do
     expect(breaker.adapter).to be_a described_class
   end
@@ -62,15 +68,41 @@ describe CircuitBreaker::Adapters::Redis do
       breaker.call(success)
     end
   end
-  it 'defaults state if not present in redis' do
-    expect(client).to receive(:get).with(state_namespace).and_return(nil)
-    expect(client).to receive(:set).with(state_namespace, closed)
-    expect(breaker.closed?).to eq true
+  describe 'defaults' do
+    it 'defaults state if not present in redis' do
+      expect(client).to receive(:get).with(state_namespace).and_return(nil)
+      expect(client).to receive(:set).with(state_namespace, closed)
+      expect(breaker.closed?).to eq true
+    end
+    it 'defaults failures if not present in redis' do
+      expect(client).to receive(:del).exactly(2).with(fail_namespace)
+      expect(client).to receive(:smembers).exactly(2).with(fail_namespace).and_return(nil)
+      expect(breaker.failure_count).to eq 0
+      expect(breaker.failures).to eq []
+    end
   end
-  it 'defaults failures if not present in redis' do
-    expect(client).to receive(:del).exactly(2).with(fail_namespace)
-    expect(client).to receive(:smembers).exactly(2).with(fail_namespace).and_return(nil)
-    expect(breaker.failure_count).to eq 0
-    expect(breaker.failures).to eq []
+  describe 'validations' do
+    it 'requires redis commands' do
+      expect {
+        CircuitBreaker.new do |cb|
+          cb.circuit = -> (arg) { service(arg) }
+          cb.failure_limit = 1
+          cb.adapter = :redis
+          cb.adapter_client = double('bad client')
+          cb.adapter_namespace = namespace
+        end
+      }.to raise_error(NotImplementedError, /missing methods/i)
+    end
+    it 'requires a namespace' do
+      expect {
+        CircuitBreaker.new do |cb|
+          cb.circuit = -> (arg) { service(arg) }
+          cb.failure_limit = 1
+          cb.adapter = :redis
+          cb.adapter_client = client
+          cb.adapter_namespace = nil
+        end
+      }.to raise_error(NotImplementedError, /missing namespace/i)
+    end
   end
 end

@@ -4,6 +4,8 @@ class CircuitBreaker
       attr_reader :client, :namespace
       def initialize(client:, namespace:)
         @client = client
+        @namespace = namespace
+        run_validations
         @namespace = "circuit_breaker:#{namespace}"
       end
 
@@ -43,6 +45,16 @@ class CircuitBreaker
 
       def state_namespace
         "#{namespace}:state"
+      end
+
+      def run_validations
+        redis_commands = [:smembers, :get, :set, :sadd, :del]
+        if !redis_commands.all? { |c| client.respond_to?(c) }
+          raise NotImplementedError.new("Missing Methods.  Your client must implement: #{redis_commands}")
+        end
+        if !namespace
+          raise NotImplementedError.new("Missing namespace")
+        end
       end
     end
   end
