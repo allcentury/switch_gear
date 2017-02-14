@@ -31,5 +31,17 @@ module Helpers
     failure.class.to_s
   end
 
+  class Redis
+    def initialize
+      redis_commands = [:smembers, :get, :set, :sadd, :del]
+      redis_commands.each do |m|
+        define_singleton_method m do
+          m
+        end
+      end
+    end
+
+  end
+
   class DummyLogger; end
 end

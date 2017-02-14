@@ -152,7 +152,7 @@ describe CircuitBreaker do
       breaker = CircuitBreaker.new do |cb|
         cb.circuit = -> {}
         cb.adapter = :redis
-        cb.adapter_client = double('client')
+        cb.adapter_client = Helpers::Redis.new
         cb.adapter_namespace = 'namespace'
       end
       expect(breaker.adapter).to be_a CircuitBreaker::Adapters::Redis
