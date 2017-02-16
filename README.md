@@ -4,10 +4,12 @@ A lightweight ruby gem that implements the famous [Michael Nygard](https://www.m
 
 ## Installation
 
+This gem is purposely not on RubyGems.org yet as I'm still finalizing the API.  If you wish to help me get to it's first stable release, please do!
+
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'circuit_breaker', :github => 'allcentury/circuit_breaker'
+gem 'circuit_breaker', github: 'allcentury/circuit_breaker'
 ```
 
 And then execute:
@@ -89,6 +91,24 @@ You need 2 additional parameters(compared to the `Memory` adapter), they are def
 
 - `client` - an instance of a `Redis` client.  This gem does not have a hard dependency on a particular redis client but for testing I've used [redis-rb](https://github.com/redis/redis-rb).  Whatever you pass in here simply has to implement a few redis commands such as `sadd`, `del`, `smembers`, `get` and `set`.  The client will ensure these exist before the breaker can be instantiated.
 - `namespace` - A unique name that will be used across servers to sync `state` and `failures`.  I'd recommend `class_name:some_method` or whatever is special about what's being invoked in the `circuit`.
+
+### Roll Your Own
+
+The goal of this project is to help you implement a circuit breaker pattern and be agnostic to the persistence layer.  I did it in memory and in redis both as working implementations to make the gem usable out of the box.  There are other in memory data stores that would work really well with this and so you can easily implement your own.
+
+```ruby
+class MyPreferredAdapter
+  include CircuitBreaker
+end
+```
+
+## Forthcoming
+
+1. A middleware in Sidekiq using this gem
+2. Better in memory support for async tasks
+3. More examples
+4. More documentation
+
 
 ## Development
 
