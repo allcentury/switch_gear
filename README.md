@@ -85,10 +85,10 @@ breaker = CircuitBreaker::Redis.new do |cb|
 end
 ```
 
-You need 2 parameters, they are defined as such:
+You need 2 additional parameters(compared to the `Memory` adapter), they are defined as such:
 
 - `client` - an instance of a `Redis` client.  This gem does not have a hard dependency on a particular redis client but for testing I've used [redis-rb](https://github.com/redis/redis-rb).  Whatever you pass in here simply has to implement a few redis commands such as `sadd`, `del`, `smembers`, `get` and `set`.  The client will ensure these exist before the breaker can be instantiated.
-- `namespace` - A unique name that will be used across servers to sync `state` and `failures`.  I'd recommend `#{class.name}:some_method` or whatever is special about what's being invoked in the `circuit`.
+- `namespace` - A unique name that will be used across servers to sync `state` and `failures`.  I'd recommend `class_name:some_method` or whatever is special about what's being invoked in the `circuit`.
 
 ## Development
 

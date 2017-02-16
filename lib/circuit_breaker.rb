@@ -6,8 +6,7 @@ require 'circuit_breaker/redis'
 require 'logger'
 
 module CircuitBreaker
-
-  # Calls the circuit (ie proc/lambda) if the circuit is closed or half-open
+  # Calls the circuit proc/lambda if the circuit is closed or half-open
   #
   # @param args [Array<Object>] Any number of Objects to be called with the circuit block.
   # @return [Void, CircuitBreaker::Open] No usable return value if successful, but will raise an error if failure_limit is reached or if the circuit is open
@@ -42,12 +41,13 @@ module CircuitBreaker
     must_implement(:failures)
   end
 
-  # @param [Array<CircuitBreaker::Failure>] a list of failures
+  # @param failure [Array<CircuitBreaker::Failure>] a list of failures
   # @return [void]
   def failures=(failure)
     must_implement(:failures=)
   end
 
+  # @param failure [CircuitBreaker::Failure] a list of failures
   # @return [void]
   def add_failure(failure)
     must_implement(:add_failure)
@@ -58,7 +58,7 @@ module CircuitBreaker
     must_implement(:state)
   end
 
-  # @param [Symbol] - either :open, :closed, :half-open
+  # @param state [Symbol] - either :open, :closed, :half-open
   # @return [void]
   def state=(state)
     must_implement(:state=)
