@@ -16,6 +16,8 @@ And then execute:
 
 ## Usage
 
+### In Memory
+
 Here's an example of how you could use the breaker while making routine calls to a third party service such as Twitter:
 
 ```ruby
@@ -26,22 +28,22 @@ require 'logger'
 
 handles = ["joe", "jane", "mary", "steve"]
 
-def get_tweets(twitter_handle)
+def get_tweets(twitter_handle, _num)
   http_result = ["Success!", "Fail"].sample
   raise RuntimeError.new("Failed to fetch tweets for #{twitter_handle}") if http_result == "Fail"
   @logger.info "#{http_result} getting tweets for #{twitter_handle}"
 end
 
-breaker = CircuitBreaker.new do |cb|
-  cb.circuit = -> (twitter_handle) { get_tweets(twitter_handle) }
+breaker = CircuitBreaker::Memory.new do |cb|
+  cb.circuit = -> (twitter_handle, num) { get_tweets(twitter_handle, num) }
   cb.failure_limit = 2
   cb.reset_timeout = 5
 end
 
-handles.each do |handle|
+handles.each_with_index do |handle, i|
   begin
-    breaker.call(handle)
-  rescue CircuitBreaker::Open
+    breaker.call(handle, i)
+  rescue CircuitBreaker::OpenError
     sleep breaker.reset_timeout
   end
 end
@@ -62,6 +64,31 @@ I, [2017-02-12T20:49:17.380771 #85900]  INFO -- : Success! getting tweets for st
 ```
 is 5+ seconds after the last error which exceeds the `reset_timeout` - that's why the breaker allowed the method invocation to go get steve's tweets.
 
+
+### Redis
+
+In an distributed environment the in memory solution of the circuit breaker creates quite a bit of unnecessary work.  If you can imagine 5 servers all running their own circuit breakers, the `failure_limit` has just increased by a factor of 5. Ideally, we want server1's failures and server2's failures to be included for similar breakers.  We do this by using redis where the state of the breaker and the failures are persisted.  Redis is a great choice for this especially since most distributed systems have a redis instance in use.
+
+You can visualize a few servers that were originally in a closed state moving to open upon failures as such:
+
+![img](https://s3.postimg.org/stxckap03/ezgif_com_video_to_gif.gif)
+
+You can set up the `CircuitBreaker` to use the redis adapter like this:
+
+```ruby
+breaker = CircuitBreaker::Redis.new do |cb|
+  cb.circuit = -> (twitter_handle, num) { get_tweets(twitter_handle, num) }
+  cb.client = redis
+  cb.namespace = "get_tweets"
+  cb.failure_limit = 2
+  cb.reset_timeout = 5
+end
+```
+
+You need 2 additional parameters(compared to the `Memory` adapter), they are defined as such:
+
+- `client` - an instance of a `Redis` client.  This gem does not have a hard dependency on a particular redis client but for testing I've used [redis-rb](https://github.com/redis/redis-rb).  Whatever you pass in here simply has to implement a few redis commands such as `sadd`, `del`, `smembers`, `get` and `set`.  The client will ensure these exist before the breaker can be instantiated.
+- `namespace` - A unique name that will be used across servers to sync `state` and `failures`.  I'd recommend `class_name:some_method` or whatever is special about what's being invoked in the `circuit`.
 
 ## Development
 

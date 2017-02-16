@@ -1,45 +1,18 @@
 require "circuit_breaker/version"
 require "circuit_breaker/failure"
+require 'circuit_breaker/open_error'
+require 'circuit_breaker/memory'
+require 'circuit_breaker/redis'
 require 'logger'
 
-class CircuitBreaker
-  class Open < StandardError; end
-
-  attr_reader :failures, :state
-  attr_accessor :circuit, :failure_limit, :reset_timeout, :logger
-
-  # The main class to instantiate the CircuitBreaker class.
-  #
-  # @example create a new breaker
-  #   breaker = CircuitBreaker.new do |cb|
-  #     cb.circuit = -> (arg) { my_method(arg) }
-  #     cb.failure_limit = 2
-  #     cb.reset_timeout = 5
-  #   end
-  #
-  # @yieldparam circuit [Proc/Lambda] The method you'll want to invoke within a breaker
-  # @yieldparam failure_limit [Integer] The maximum amount of failures you'll tolerate in a row before the breaker is tripped. Defaults to 5.
-  # @yieldparam reset_timeout [Integer] The amount of time before the breaker should move back to closed after the last failure.  For instance if you set this to 5, the breaker is callable again 5+ seconds after the last failure.  Defaults to 10 seconds
-  # @yieldparam logger [Logger] A logger instance of your choosing.  Defaults to ruby's std logger.
-  #
-  # @return [CircuitBreaker] the object.
-  def initialize(&block)
-    yield self
-    @failures = []
-    @state = :closed
-    @failure_limit ||= 5
-    @reset_timeout ||= 10
-    @logger ||= Logger.new(STDOUT)
-    run_validations
-  end
-
+module CircuitBreaker
   # Calls the circuit proc/lambda if the circuit is closed or half-open
   #
   # @param args [Array<Object>] Any number of Objects to be called with the circuit block.
-  # @return [Void, CircuitBreaker::Open] No usable return value if successful, but will raise an error if failure_limit is reached.
+  # @return [Void, CircuitBreaker::Open] No usable return value if successful, but will raise an error if failure_limit is reached or if the circuit is open
   def call(*args)
     check_reset_timeout
-    raise Open if open?
+    raise OpenError if open?
     do_run(args, &circuit)
   end
 
@@ -63,7 +36,39 @@ class CircuitBreaker
     state == :half_open
   end
 
+  # @return [Array<CircuitBreaker::Failure>] a list of current failures
+  def failures
+    must_implement(:failures)
+  end
+
+  # @param failure [Array<CircuitBreaker::Failure>] a list of failures
+  # @return [void]
+  def failures=(failure)
+    must_implement(:failures=)
+  end
+
+  # @param failure [CircuitBreaker::Failure] a list of failures
+  # @return [void]
+  def add_failure(failure)
+    must_implement(:add_failure)
+  end
+
+  # @return [Symbol] - either :open, :closed, :half-open
+  def state
+    must_implement(:state)
+  end
+
+  # @param state [Symbol] - either :open, :closed, :half-open
+  # @return [void]
+  def state=(state)
+    must_implement(:state=)
+  end
+
   private
+
+  def must_implement(arg)
+    raise NotImplementedError.new("You must implement #{arg}.")
+  end
 
   def do_run(args)
     yield *args
@@ -75,7 +80,7 @@ class CircuitBreaker
   def check_reset_timeout
     return if !open?
     if reset_period_lapsed?
-      @state = :half_open
+      self.state = :half_open
     end
   end
 
@@ -84,19 +89,19 @@ class CircuitBreaker
   end
 
   def reset_failures
-    @failures = []
-    @state = :closed
+    self.failures = []
+    self.state = :closed
     logger.info "Circuit closed"
   end
 
   def handle_failure(e)
     failure = Failure.new(e)
-    failures << failure
+    add_failure(failure)
     logger.warn failure.to_s
     if half_open? || failures.size >= failure_limit
-      @state = :open
+      self.state = :open
     else
-      @state = :closed
+      self.state = :closed
     end
   end
 

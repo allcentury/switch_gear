@@ -39,4 +39,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "timecop", "~> 0.8"
   spec.add_development_dependency "simplecov", "~> 0.13"
   spec.add_development_dependency "yard", "~> 0.9"
+  spec.add_development_dependency "redis", "~> 3.3"
 end
