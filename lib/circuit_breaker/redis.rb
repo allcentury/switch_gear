@@ -36,6 +36,7 @@ module CircuitBreaker
     def state
       redis_state = client.get(state_namespace)
       return redis_state.to_sym if redis_state
+      # if there is no state stored in redis, set it.
       self.state = :closed
     end
 
@@ -46,6 +47,7 @@ module CircuitBreaker
     def failures
       redis_fails = client.smembers(fail_namespace)
       return redis_fails.map { |f| Failure.from_json(f) } if redis_fails
+      # if there are no failures in redis, set it to empty
       self.failures = []
       []
     end
