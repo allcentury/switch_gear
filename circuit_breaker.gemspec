@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Anthony Ross"]
   spec.email         = ["anthony.s.ross@gmail.com"]
 
-  spec.summary       = %q{Circuitt Breaker pattern}
-  spec.description   = %q{The Circuit Breaker pattern is used to prevent constant failover from spotty remote systems}
+  spec.summary       = %q{Circuit Breaker pattern}
+  spec.description   = %q{The Circuit Breaker pattern is used to prevent constant fail-over from spotty remote systems}
   spec.homepage      = ""
   spec.license       = "MIT"
 
