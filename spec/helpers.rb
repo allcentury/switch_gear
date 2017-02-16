@@ -40,7 +40,19 @@ module Helpers
         end
       end
     end
+  end
 
+  class MyAdapter
+    include CircuitBreaker
+    attr_accessor :circuit, :logger
+    def initialize
+      yield self
+      @logger ||= Logger.new(STDOUT)
+    end
+
+    def run_validations
+      super
+    end
   end
 
   class DummyLogger; end
