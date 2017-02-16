@@ -27,6 +27,7 @@ handles.each_with_index do |handle, i|
   begin
     breaker.call(handle, i)
   rescue CircuitBreaker::OpenError
+    @logger.warn "Circuit is open - unable to make calls for #{handle}"
     sleep breaker.reset_timeout
   end
 end
