@@ -1,5 +1,5 @@
 require 'json'
-class CircuitBreaker
+module CircuitBreaker
   class Failure
     def self.from_json(json)
       failure = JSON.parse(json)

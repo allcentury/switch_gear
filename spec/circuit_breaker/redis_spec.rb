@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe CircuitBreaker::Adapters::Redis do
+describe CircuitBreaker::Redis do
   let(:client) { double('redis') }
   let(:namespace) { "service" }
   let(:state_namespace) { "circuit_breaker:#{namespace}:state" }
@@ -8,12 +8,11 @@ describe CircuitBreaker::Adapters::Redis do
   let(:closed) { "closed"}
   let(:open) { "open" }
   let(:breaker) do
-    CircuitBreaker.new do |cb|
+    described_class.new do |cb|
       cb.circuit = -> (arg) { service(arg) }
+      cb.client = client
       cb.failure_limit = 1
-      cb.adapter = :redis
-      cb.adapter_client = client
-      cb.adapter_namespace = namespace
+      cb.namespace = namespace
     end
   end
   before(:each) do
@@ -21,9 +20,6 @@ describe CircuitBreaker::Adapters::Redis do
     redis_commands.each do |c|
       allow(client).to receive(:respond_to?).with(c).and_return(true)
     end
-  end
-  it 'registers the right adapter' do
-    expect(breaker.adapter).to be_a described_class
   end
   describe 'writes and reads' do
     let(:timestamp) { "2017-02-13 23:31:31 UTC" }
@@ -42,7 +38,7 @@ describe CircuitBreaker::Adapters::Redis do
       expect(client).to receive(:del).with(fail_namespace)
       breaker.call(success)
 
-      expect(breaker.adapter.state).to eq :closed
+      expect(breaker.closed?).to eq true
     end
     it 'holds failures in redis' do
       expect(client).to receive(:get).exactly(3).with(state_namespace).and_return(closed)
@@ -83,24 +79,22 @@ describe CircuitBreaker::Adapters::Redis do
   end
   describe 'validations' do
     it 'requires redis commands' do
+      bad_client = double('bad redis client')
       expect {
-        CircuitBreaker.new do |cb|
+        described_class.new do |cb|
           cb.circuit = -> (arg) { service(arg) }
           cb.failure_limit = 1
-          cb.adapter = :redis
-          cb.adapter_client = double('bad client')
-          cb.adapter_namespace = namespace
+          cb.client = bad_client
+          cb.namespace = namespace
         end
       }.to raise_error(NotImplementedError, /missing methods/i)
     end
     it 'requires a namespace' do
       expect {
-        CircuitBreaker.new do |cb|
+        described_class.new do |cb|
           cb.circuit = -> (arg) { service(arg) }
           cb.failure_limit = 1
-          cb.adapter = :redis
-          cb.adapter_client = client
-          cb.adapter_namespace = nil
+          cb.client = client
         end
       }.to raise_error(NotImplementedError, /missing namespace/i)
     end
