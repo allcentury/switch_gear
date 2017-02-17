@@ -15,6 +15,13 @@ describe CircuitBreaker::Redis do
       cb.namespace = namespace
     end
   end
+  let(:default_breaker) do
+    described_class.new do |cb|
+      cb.circuit = -> {}
+      cb.client = client
+      cb.namespace = namespace
+    end
+  end
   before(:each) do
     redis_commands = [:smembers, :get, :set, :sadd, :del]
     redis_commands.each do |c|
@@ -65,16 +72,25 @@ describe CircuitBreaker::Redis do
     end
   end
   describe 'defaults' do
-    it 'defaults state if not present in redis' do
+    it 'state if not present in redis' do
       expect(client).to receive(:get).with(state_namespace).and_return(nil)
       expect(client).to receive(:set).with(state_namespace, closed)
       expect(breaker.closed?).to eq true
     end
-    it 'defaults failures if not present in redis' do
+    it 'failures if not present in redis' do
       expect(client).to receive(:del).exactly(2).with(fail_namespace)
       expect(client).to receive(:smembers).exactly(2).with(fail_namespace).and_return(nil)
       expect(breaker.failure_count).to eq 0
       expect(breaker.failures).to eq []
+    end
+    it 'failure_limit of 5' do
+      expect(default_breaker.failure_limit).to eq 5
+    end
+    it 'reset_timeout to 10 seconds' do
+      expect(default_breaker.reset_timeout).to eq 10
+    end
+    it 'uses the ruby logger' do
+      expect(default_breaker.logger).to be_a Logger
     end
   end
   describe 'validations' do
