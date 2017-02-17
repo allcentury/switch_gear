@@ -1,14 +1,36 @@
 module CircuitBreaker
-
   class Redis
     include CircuitBreaker
-    attr_accessor :circuit, :failure_limit, :reset_timeout, :logger,
-                  :state, :failures, :namespace, :client
+    # (look to {CircuitBreaker::Memory#circuit})
+    attr_accessor :circuit
+    # (look to {CircuitBreaker::Memory#failure_limit})
+    attr_accessor :failure_limit
+    # (look to {CircuitBreaker::Memory#reset_timeout})
+    attr_accessor :reset_timeout
+    # (look to {CircuitBreaker::Memory#logger})
+    attr_accessor :logger
+    # (look to {CircuitBreaker::Memory#state})
+    attr_accessor :state
+    # (look to {CircuitBreaker::Memory#failures})
+    attr_accessor :failures
+    # A unique name that will be used across servers to
+    # sync state and failures.  I'd recommend `your_class.name:your_method_name` or whatever
+    # is special about what's being invoked in the `circuit`.  See examples/example_redis.rb
+    # @return [String] - namespace given
+    attr_accessor :namespace
+
+    # An instance of an redis client.  This library does not have a
+    # hard dependency on a particular redis client but for testing I've used
+    # [redis-rb](https://github.com/redis/redis-rb).  Whatever you pass in here simply has to
+    # implement a few redis commands such as `sadd`, `del`, `smembers`, `get` and `set`.
+    # The client will ensure these exist before the breaker can be instantiated.
+    # @return [Object] - redis client given
+    attr_accessor :client
 
     # The main class to instantiate the CircuitBraker class.
     #
     # @example create a new breaker
-    #   breaker = CircuitBreaker.new do |cb|
+    #   breaker = CircuitBreaker::Redis.new do |cb|
     #     cb.circuit = -> (arg) { my_method(arg) }
     #     cb.failure_limit = 2
     #     cb.reset_timeout = 5
@@ -16,18 +38,19 @@ module CircuitBreaker
     #     cb.namespace = "some_key"
     #   end
     #
-    # @yieldparam circuit [Proc/Lambda] The method you'll want to invoke within a breaker
-    # @yieldparam failure_limit [Integer] The maximum amount of failures you'll tolerate in a row before the breaker is tripped. Defaults to 5.
-    # @yieldparam reset_timeout [Integer] The amount of time before the breaker should move back to closed after the last failure.  For instance if you set this to 5, the breaker is callable again 5+ seconds after the last failure.  Defaults to 10 seconds
-    # @yieldparam logger [Logger] A logger instance of your choosing.  Defaults to ruby's std logger.
-    # @yieldparam client [Object] - an instance of an redis client.  This library does not have a hard dependency on a particular redis client but for testing I've used [redis-rb](https://github.com/redis/redis-rb).  Whatever you pass in here simply has to implement a few redis commands such as `sadd`, `del`, `smembers`, `get` and `set`.  The client will ensure these exist before the breaker can be instantiated.
-    # @yieldparam namespace [String] A unique name that will be used across servers to sync `state` and `failures`.  I'd recommend `your_class.name:your_method_name` or whatever is special about what's being invoked in the `circuit`.  See examples/example_redis.rb
-    #
-    # @return [CircuitBreaker] the object.
+    # @yieldparam circuit - (look to {#circuit})
+    # @yieldparam failure_limit - (look to {#failure_limit})
+    # @yieldparam reset_timeout - (look to {#reset_timeout})
+    # @yieldparam logger - (look to {#logger})
+    # @yieldparam client - (look to {#client})
+    # @yieldparam namespace - (look to {#namespace})
+    # @return [CircuitBreaker::Redis] the object.
     def initialize
       yield self
       @client = client
       @namespace = namespace
+      @failure_limit ||= 5
+      @reset_timeout ||= 10
       @logger = Logger.new(STDOUT)
       run_validations
       @namespace = "circuit_breaker:#{namespace}"
