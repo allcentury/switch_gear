@@ -4,12 +4,12 @@ A lightweight ruby gem that implements the famous [Michael Nygard](https://www.m
 
 ## Installation
 
-This gem is purposely not on RubyGems.org yet as I'm still finalizing the API.  If you wish to help me get to it's first stable release, please do!
+This gem is in alpha and is on RubyGems.org as [`adaptable_circuit_breaker`](https://rubygems.org/gems/adaptable_circuit_breaker). I'm still finalizing the API, but if you wish to help me get to it's first stable release, please do!
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'circuit_breaker', github: 'allcentury/circuit_breaker'
+gem 'adapatable_circuit_breaker'
 ```
 
 And then execute:
