@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe CircuitBreaker::Redis do
+describe SwitchGear::CircuitBreaker::Redis do
   let(:client) { double('redis') }
   let(:namespace) { "service" }
   let(:state_namespace) { "circuit_breaker:#{namespace}:state" }

@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe CircuitBreaker::Failure do
+describe SwitchGear::CircuitBreaker::Failure do
   let(:msg) { "Failed to read from remote" }
   let(:error) { StandardError.new(msg) }
   let(:failure) { described_class.new(error) }
@@ -29,7 +29,7 @@ describe CircuitBreaker::Failure do
     end
     it '.from_json' do
       failure = described_class.from_json(json)
-      expect(failure).to be_a CircuitBreaker::Failure
+      expect(failure).to be_a SwitchGear::CircuitBreaker::Failure
       expect(failure.to_s).to include "StandardError"
       expect(failure.timestamp).to be_a Time
     end

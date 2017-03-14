@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require "bundler/setup"
-require "circuit_breaker"
+require "switch_gear"
 
 require "irb"
 IRB.start

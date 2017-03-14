@@ -1,4 +1,4 @@
-require 'circuit_breaker'
+require 'switch_gear/circuit_breaker'
 require 'logger'
 
 @logger = Logger.new(STDOUT)
@@ -11,7 +11,7 @@ def get_tweets(twitter_handle)
   @logger.info "#{http_result} getting tweets for #{twitter_handle}"
 end
 
-breaker = CircuitBreaker::Memory.new do |cb|
+breaker = SwitchGear::CircuitBreaker::Memory.new do |cb|
   cb.circuit = -> (twitter_handle) { get_tweets(twitter_handle) }
   cb.failure_limit = 2
   cb.reset_timeout = 5
@@ -20,7 +20,7 @@ end
 handles.each do |handle|
   begin
     breaker.call(handle)
-  rescue CircuitBreaker::OpenError
+  rescue SwitchGear::CircuitBreaker::OpenError
     @logger.warn "Circuit is open - unable to make calls for #{handle}"
     sleep breaker.reset_timeout
   end

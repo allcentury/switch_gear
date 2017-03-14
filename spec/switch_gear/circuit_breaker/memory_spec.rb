@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe CircuitBreaker::Memory do
+describe SwitchGear::CircuitBreaker::Memory do
   let(:breaker) do
     described_class.new do |cb|
       cb.circuit = -> (arg) { service(arg) }
@@ -28,7 +28,7 @@ describe CircuitBreaker::Memory do
 
       expect(breaker.failure_count).to eq failure_limit
       expect(breaker.open?).to eq true
-      expect { breaker.call(failure) }.to raise_error(CircuitBreaker::OpenError)
+      expect { breaker.call(failure) }.to raise_error(SwitchGear::CircuitBreaker::OpenError)
     end
   end
   describe 'resetting' do
