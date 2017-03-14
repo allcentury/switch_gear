@@ -1,4 +1,4 @@
-require 'circuit_breaker'
+require 'switch_gear/circuit_breaker'
 require 'logger'
 require 'redis'
 
@@ -14,7 +14,7 @@ end
 
 redis = Redis.new
 
-breaker = CircuitBreaker::Redis.new do |cb|
+breaker = SwitchGear::CircuitBreaker::Redis.new do |cb|
   cb.circuit = -> (twitter_handle) { get_tweets(twitter_handle) }
   cb.client = redis
   cb.namespace = "get_tweets"
@@ -25,7 +25,7 @@ end
 handles.each do |handle|
   begin
     breaker.call(handle)
-  rescue CircuitBreaker::OpenError
+  rescue SwitchGear::CircuitBreaker::OpenError
     @logger.warn "Circuit is open - unable to make calls for #{handle}"
     sleep breaker.reset_timeout
   end

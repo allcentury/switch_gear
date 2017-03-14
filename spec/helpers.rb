@@ -43,7 +43,7 @@ module Helpers
   end
 
   class MyAdapter
-    include CircuitBreaker
+    include SwitchGear::CircuitBreaker
     attr_accessor :circuit, :logger
     def initialize
       yield self

@@ -1,17 +1,17 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'circuit_breaker/version'
+require 'switch_gear/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "adaptable_circuit_breaker"
-  spec.version       = CircuitBreaker::VERSION
+  spec.name          = "switch_gear"
+  spec.version       = SwitchGear::VERSION
   spec.authors       = ["Anthony Ross"]
   spec.email         = ["anthony.s.ross@gmail.com"]
 
-  spec.summary       = %q{Circuit Breaker pattern}
-  spec.description   = %q{The Circuit Breaker pattern is used to prevent constant fail-over from spotty remote systems}
-  spec.homepage      = ""
+  spec.summary       = %q{SwitchGear is a library containing the Circuit Breaker pattern}
+  spec.description   = %q{SwitchGear is a library which contains the Circuit Breaker pattern.  It is used to prevent constant fail-over from spotty remote systems}
+  spec.homepage      = "https://github.com/allcentury/switch_gear"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|

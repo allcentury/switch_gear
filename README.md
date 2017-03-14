@@ -1,15 +1,17 @@
-# CircuitBreaker
+# SwitchGear
 
-A lightweight ruby gem that implements the famous [Michael Nygard](https://www.martinfowler.com/bliki/CircuitBreaker.html) circuit breaker pattern.
+>In an electric power system, switchgear is the combination of electrical disconnect switches, fuses or circuit breakers used to control, protect and isolate electrical equipment. Switchgears are used both to de-energize equipment to allow work to be done and to clear faults downstream. This type of equipment is directly linked to the reliability of the electricity supply.
+
+SwitchGear is a module that will implement various failover protection layers for deploying apps at scale.  The first module is a lightweight implementation of the famous [Michael Nygard](https://www.martinfowler.com/bliki/CircuitBreaker.html) circuit breaker pattern.
 
 ## Installation
 
-This gem is in alpha and is on RubyGems.org as [`adaptable_circuit_breaker`](https://rubygems.org/gems/adaptable_circuit_breaker). I'm still finalizing the API, but if you wish to help me get to it's first stable release, please do!
+This gem is in alpha and is on RubyGems.org. I'm still finalizing the API, but if you wish to help me get to it's first stable release, please do!
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'adapatable_circuit_breaker'
+gem 'switch_gear'
 ```
 
 And then execute:
@@ -18,12 +20,14 @@ And then execute:
 
 ## Usage
 
-### In Memory
+### CircuitBreaker
+
+#### In Memory
 
 Here's an example of how you could use the breaker while making routine calls to a third party service such as Twitter:
 
 ```ruby
-require 'circuit_breaker'
+require 'switch_gear/circuit_breaker'
 require 'logger'
 
 @logger = Logger.new(STDOUT)
@@ -36,7 +40,7 @@ def get_tweets(twitter_handle)
   @logger.info "#{http_result} getting tweets for #{twitter_handle}"
 end
 
-breaker = CircuitBreaker::Memory.new do |cb|
+breaker = SwitchGear::CircuitBreaker::Memory.new do |cb|
   cb.circuit = -> (twitter_handle) { get_tweets(twitter_handle) }
   cb.failure_limit = 2
   cb.reset_timeout = 5
@@ -45,7 +49,7 @@ end
 handles.each do |handle|
   begin
     breaker.call(handle)
-  rescue CircuitBreaker::OpenError
+  rescue SwitchGear::CircuitBreaker::OpenError
     @logger.warn "Circuit is open - unable to make calls for #{handle}"
     sleep breaker.reset_timeout
   end
@@ -68,7 +72,7 @@ I, [2017-02-12T20:49:17.380771 #85900]  INFO -- : Success! getting tweets for st
 is 5+ seconds after the last error which exceeds the `reset_timeout` - that's why the breaker allowed the method invocation to go get steve's tweets.
 
 
-### Redis
+#### Redis
 
 In an distributed environment the in memory solution of the circuit breaker creates quite a bit of unnecessary work.  If you can imagine 5 servers all running their own circuit breakers, the `failure_limit` has just increased by a factor of 5. Ideally, we want server1's failures and server2's failures to be included for similar breakers.  We do this by using redis where the state of the breaker and the failures are persisted.  Redis is a great choice for this especially since most distributed systems have a redis instance in use.
 
@@ -79,7 +83,7 @@ You can visualize a few servers that were originally in a closed state moving to
 You can set up the `CircuitBreaker` to use the redis adapter like this:
 
 ```ruby
-breaker = CircuitBreaker::Redis.new do |cb|
+breaker = SwitchGear::CircuitBreaker::Redis.new do |cb|
   cb.circuit = -> (twitter_handle) { get_tweets(twitter_handle) }
   cb.client = redis
   cb.namespace = "get_tweets"
@@ -93,13 +97,13 @@ You need 2 additional parameters(compared to the `Memory` adapter), they are def
 - `client` - an instance of a `Redis` client.  This gem does not have a hard dependency on a particular redis client but for testing I've used [redis-rb](https://github.com/redis/redis-rb).  Whatever you pass in here simply has to implement a few redis commands such as `sadd`, `del`, `smembers`, `get` and `set`.  The client will ensure these exist before the breaker can be instantiated.
 - `namespace` - A unique name that will be used across servers to sync `state` and `failures`.  I'd recommend `class_name:some_method` or whatever is special about what's being invoked in the `circuit`.
 
-### Roll Your Own
+#### Roll Your Own Circuit Breaker
 
 The goal of this project is to help you implement a circuit breaker pattern and be agnostic to the persistence layer.  I did it in memory and in redis both as working implementations to make the gem usable out of the box.  There are other in memory data stores that would work really well with this and so you can easily implement your own.
 
 ```ruby
 class MyPreferredAdapter
-  include CircuitBreaker
+  include SwitchGear::CircuitBreaker
 end
 ```
 

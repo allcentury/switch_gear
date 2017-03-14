@@ -1,17 +1,14 @@
 require "spec_helper"
 
-describe CircuitBreaker do
+describe SwitchGear::CircuitBreaker do
   let(:circuit) do
     ->(arg) { service(arg) }
   end
   let(:breaker) do
-    CircuitBreaker::Memory.new do |cb|
+    SwitchGear::CircuitBreaker::Memory.new do |cb|
       cb.circuit = circuit
       cb.failure_limit = failure_limit
     end
-  end
-  it "has a version number" do
-    expect(CircuitBreaker::VERSION).not_to be nil
   end
   context "#call" do
     it 'calls do_run with args and the circuit' do
@@ -25,7 +22,7 @@ describe CircuitBreaker do
       allow(breaker).to receive(:open?).and_return(true)
       expect {
         breaker.call(failure)
-      }.to raise_error(CircuitBreaker::OpenError)
+      }.to raise_error(SwitchGear::CircuitBreaker::OpenError)
     end
     it 'checks if the reset_timeout has lapsed and if so changes the state' do
       allow(breaker).to receive(:open?).and_return(true, false)
