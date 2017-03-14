@@ -24,7 +24,7 @@ module SwitchGear
       attr_accessor :failures
       #
       # @example create a new breaker
-      #   breaker = CircuitBreaker::Memory.new do |cb|
+      #   breaker = SwitchGear::CircuitBreaker::Memory.new do |cb|
       #     cb.circuit = -> (arg) { my_method(arg) }
       #     cb.failure_limit = 2
       #     cb.reset_timeout = 5
@@ -34,7 +34,7 @@ module SwitchGear
       # @yieldparam failure_limit - (look to {#failure_limit})
       # @yieldparam reset_timeout - (look to {#reset_timeout})
       # @yieldparam logger - (look to {#logger})
-      # @return [CircuitBreaker::Memory] the object.
+      # @return [SwitchGear::CircuitBreaker::Memory] the object.
       def initialize(&block)
         yield self
         @failure_limit ||= 5
@@ -45,7 +45,7 @@ module SwitchGear
         run_validations
       end
 
-      # (look to {CircuitBreaker::add_failure})
+      # (look to {SwitchGear::CircuitBreaker::add_failure})
       def add_failure(failure)
         failures << failure
       end

@@ -2,17 +2,17 @@ module SwitchGear
   module CircuitBreaker
     class Redis
       include CircuitBreaker
-      # (look to {CircuitBreaker::Memory#circuit})
+      # (look to {SwitchGear::CircuitBreaker::Memory#circuit})
       attr_accessor :circuit
-      # (look to {CircuitBreaker::Memory#failure_limit})
+      # (look to {SwitchGear::CircuitBreaker::Memory#failure_limit})
       attr_accessor :failure_limit
-      # (look to {CircuitBreaker::Memory#reset_timeout})
+      # (look to {SwitchGear::CircuitBreaker::Memory#reset_timeout})
       attr_accessor :reset_timeout
-      # (look to {CircuitBreaker::Memory#logger})
+      # (look to {SwitchGear::CircuitBreaker::Memory#logger})
       attr_accessor :logger
-      # (look to {CircuitBreaker::Memory#state})
+      # (look to {SwitchGear::CircuitBreaker::Memory#state})
       attr_accessor :state
-      # (look to {CircuitBreaker::Memory#failures})
+      # (look to {SwitchGear::CircuitBreaker::Memory#failures})
       attr_accessor :failures
       # A unique name that will be used across servers to
       # sync state and failures.  I'd recommend `your_class.name:your_method_name` or whatever
@@ -31,7 +31,7 @@ module SwitchGear
       # The main class to instantiate the CircuitBraker class.
       #
       # @example create a new breaker
-      #   breaker = CircuitBreaker::Redis.new do |cb|
+      #   breaker = SwitchGear::CircuitBreaker::Redis.new do |cb|
       #     cb.circuit = -> (arg) { my_method(arg) }
       #     cb.failure_limit = 2
       #     cb.reset_timeout = 5
@@ -45,7 +45,7 @@ module SwitchGear
       # @yieldparam logger - (look to {#logger})
       # @yieldparam client - (look to {#client})
       # @yieldparam namespace - (look to {#namespace})
-      # @return [CircuitBreaker::Redis] the object.
+      # @return [SwitchGear::CircuitBreaker::Redis] the object.
       def initialize
         yield self
         @client = client

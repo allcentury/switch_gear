@@ -9,7 +9,7 @@ module SwitchGear
     # Calls the circuit proc/lambda if the circuit is closed or half-open
     #
     # @param args [Array<Object>] Any number of Objects to be called with the circuit block.
-    # @return [Void, CircuitBreaker::Open] No usable return value if successful, but will raise an error if failure_limit is reached or if the circuit is open
+    # @return [Void, SwitchGear::CircuitBreaker::Open] No usable return value if successful, but will raise an error if failure_limit is reached or if the circuit is open
     def call(*args)
       check_reset_timeout
       raise OpenError if open?
@@ -36,18 +36,18 @@ module SwitchGear
       state == :half_open
     end
 
-    # @return [Array<CircuitBreaker::Failure>] a list of current failures
+    # @return [Array<SwitchGear::CircuitBreaker::Failure>] a list of current failures
     def failures
       must_implement(:failures)
     end
 
-    # @param failure [Array<CircuitBreaker::Failure>] a list of failures
+    # @param failure [Array<SwitchGear::CircuitBreaker::Failure>] a list of failures
     # @return [void]
     def failures=(failure)
       must_implement(:failures=)
     end
 
-    # @param failure [CircuitBreaker::Failure] a list of failures
+    # @param failure [SwitchGear::CircuitBreaker::Failure] a list of failures
     # @return [void]
     def add_failure(failure)
       must_implement(:add_failure)
