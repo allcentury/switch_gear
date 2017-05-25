@@ -24,7 +24,7 @@ And then execute:
 
 #### In Memory
 
-Here's an example of how you could use the breaker while making routine calls to a third party service such as Twitter:
+Here is an example of how you could use the breaker while making routine calls to a third party service such as Twitter:
 
 ```ruby
 require 'switch_gear/circuit_breaker'
