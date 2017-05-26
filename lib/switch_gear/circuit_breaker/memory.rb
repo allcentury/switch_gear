@@ -7,7 +7,7 @@ module SwitchGear
       # @return [Proc/Lambda] the runner
       attr_accessor :circuit
       # The count of failures
-      # @return [Integer] the amount of failures to permit.  Defaults to 10 seconds
+      # @return [Integer] the amount of failures to permit.  Defaults to 10 seconds.
       attr_accessor :failure_limit
       # The amount of time in seconds before a breaker should reset if currently open.  Defaults to 5
       # @return [Integer]

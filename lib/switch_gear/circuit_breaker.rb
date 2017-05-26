@@ -6,7 +6,7 @@ require 'logger'
 
 module SwitchGear
   module CircuitBreaker
-    # Calls the circuit proc/lambda if the circuit is closed or half-open
+    # Calls the circuit proc/lambda if the circuit is closed or half-open.
     #
     # @param args [Array<Object>] Any number of Objects to be called with the circuit block.
     # @return [Void, SwitchGear::CircuitBreaker::Open] No usable return value if successful, but will raise an error if failure_limit is reached or if the circuit is open
