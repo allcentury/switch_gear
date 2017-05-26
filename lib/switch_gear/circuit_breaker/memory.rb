@@ -13,7 +13,7 @@ module SwitchGear
       # @return [Integer]
       attr_accessor :reset_timeout
       # The current logger
-      # @return [Object] - The logger sent in at initialization.  Defaults to ruby's std Logger class
+      # @return [Object] - The logger sent in at initialization.  Defaults to ruby's std Logger class.
       attr_accessor :logger
       # The current state
       # @return [Symbol] should always return either :open, :closed or :half-open.
