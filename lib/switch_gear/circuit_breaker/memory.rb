@@ -9,7 +9,7 @@ module SwitchGear
       # The count of failures
       # @return [Integer] the amount of failures to permit.  Defaults to 10 seconds.
       attr_accessor :failure_limit
-      # The amount of time in seconds before a breaker should reset if currently open.  Defaults to 5
+      # The amount of time in seconds before a breaker should reset if currently open.  Defaults to 5.
       # @return [Integer]
       attr_accessor :reset_timeout
       # The current logger
