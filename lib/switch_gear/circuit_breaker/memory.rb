@@ -3,7 +3,7 @@ module SwitchGear
     class Memory
       include CircuitBreaker
 
-      # The main runner, must respond to #call
+      # The main runner, must respond to #call.
       # @return [Proc/Lambda] the runner
       attr_accessor :circuit
       # The count of failures
