@@ -99,10 +99,10 @@ You need 2 additional parameters(compared to the `Memory` adapter), they are def
 
 #### Roll Your Own Circuit Breaker
 
-The goal of this project is to help you implement a circuit breaker pattern and be agnostic to the persistence layer.  I did it in memory and in redis both as working implementations to make the gem usable out of the box.  There are other in memory data stores that would work really well with this and so you can easily implement your own.
+The goal of this project is to help you implement a circuit breaker pattern and be agnostic to the persistence layer.  I did it in memory and in redis both as working implementations to make the gem usable out of the box.  There are other persitence stores that would work really well with this and you can roll your own simply by including the mixin.
 
 ```ruby
-class MyPreferredAdapter
+class MyPreferredStore
   include SwitchGear::CircuitBreaker
 end
 ```
