@@ -6,7 +6,7 @@ module SwitchGear
         failure = JSON.parse(json)
         error = Object.const_get(failure["error"])
         error = error.new(failure["message"])
-        new(error, Time.parse(failure["timestamp"]))
+        new(error, Time.at(failure["timestamp"]).utc)
       end
 
       def initialize(error, recorded = Time.now.utc)
@@ -26,7 +26,7 @@ module SwitchGear
         JSON.generate({
           error: error.class,
           message: error.message,
-          timestamp: timestamp.to_s
+          timestamp: timestamp.to_i
         })
       end
 

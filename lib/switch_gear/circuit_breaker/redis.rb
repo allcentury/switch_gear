@@ -68,23 +68,33 @@ module SwitchGear
         client.set(state_namespace, state.to_s)
       end
 
+      def failure_count
+        client.llen(fail_namespace)
+      end
+
+      def most_recent_failure
+        Failure.from_json(client.lindex(fail_namespace, -1))
+      end
+
       def failures
-        redis_fails = client.smembers(fail_namespace)
-        return redis_fails.map { |f| Failure.from_json(f) } if redis_fails
+        if failure_count > 0
+          redis_fails = client.lrange(fail_namespace, 0, -1)
+          return redis_fails.map { |f| Failure.from_json(f) }
+        end
         # if there are no failures in redis, set it to empty
         self.failures = []
         []
       end
 
       def add_failure(failure)
-        client.sadd(fail_namespace, failure.to_json)
+        client.rpush(fail_namespace, failure.to_json)
       end
 
       # failures= requires we replace what is currently in redis
       # with the new value so we delete all entries first then add
       def failures=(failures)
         client.del(fail_namespace)
-        failures.each { |f| client.sadd(fail_namespace, f.to_json) }
+        failures.each { |f| client.rpush(fail_namespace, f.to_json) }
       end
 
       private
@@ -100,7 +110,7 @@ module SwitchGear
       def run_validations
         # call super to ensure module has what it needs
         super
-        redis_commands = [:smembers, :get, :set, :sadd, :del]
+        redis_commands = [:rpush, :lindex, :llen, :del, :set, :get]
         if !redis_commands.all? { |c| client.respond_to?(c) }
           raise NotImplementedError.new("Missing Methods.  Your client must implement: #{redis_commands}")
         end
