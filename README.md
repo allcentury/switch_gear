@@ -106,6 +106,9 @@ class MyPreferredStore
   include SwitchGear::CircuitBreaker
 end
 ```
+## Sidekiq
+
+I've [written a middleware](https://github.com/allcentury/switch_gear_sidekiq-middleware) for use with Sidekiq.
 
 ## Forthcoming
 
