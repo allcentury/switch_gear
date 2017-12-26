@@ -23,7 +23,7 @@ describe SwitchGear::CircuitBreaker::Redis do
     end
   end
   before(:each) do
-    redis_commands = [:smembers, :get, :set, :sadd, :del]
+    redis_commands = [:rpush, :lindex, :llen, :del, :set, :get]
     redis_commands.each do |c|
       allow(client).to receive(:respond_to?).with(c).and_return(true)
     end
@@ -36,7 +36,7 @@ describe SwitchGear::CircuitBreaker::Redis do
     before(:each) do
       time = Time.now.utc
       Timecop.freeze(time)
-      @new_error = { error: error_class, message: failure_msg, timestamp: time }.to_json
+      @new_error = { error: error_class, message: failure_msg, timestamp: time.to_i }.to_json
     end
     it 'holds state in redis' do
       expect(client).to receive(:get).exactly(3).with(state_namespace).and_return(closed)
@@ -49,10 +49,10 @@ describe SwitchGear::CircuitBreaker::Redis do
     end
     it 'holds failures in redis' do
       expect(client).to receive(:get).exactly(3).with(state_namespace).and_return(closed)
-      expect(client).to receive(:smembers).with(fail_namespace).and_return([failure_json])
 
       # this gets called after a failed call
-      expect(client).to receive(:sadd).with(fail_namespace, @new_error)
+      expect(client).to receive(:rpush).with(fail_namespace, @new_error)
+      expect(client).to receive(:llen).with(fail_namespace).and_return(1)
       expect(client).to receive(:set).with(state_namespace, open)
       breaker.call(failure)
     end
@@ -60,8 +60,8 @@ describe SwitchGear::CircuitBreaker::Redis do
       expect(client).to receive(:get).exactly(5).with(state_namespace).and_return(closed)
       time = Time.now.utc
       Timecop.freeze(time)
-      expect(client).to receive(:sadd).with(fail_namespace, @new_error)
-      expect(client).to receive(:smembers).with(fail_namespace).and_return([failure_json])
+      expect(client).to receive(:rpush).with(fail_namespace, @new_error)
+      expect(client).to receive(:llen).with(fail_namespace).and_return(1)
       expect(client).to receive(:set).with(state_namespace, open)
       breaker.call(failure)
       Timecop.travel(breaker.reset_timeout)
@@ -69,6 +69,22 @@ describe SwitchGear::CircuitBreaker::Redis do
       expect(client).to receive(:set).with(state_namespace, closed)
       expect(client).to receive(:del).with(fail_namespace)
       breaker.call(success)
+    end
+    context "#most_recent_failure" do
+      it "grabs from the LL tail" do
+        expect(client).to receive(:lindex).with(fail_namespace, -1).and_return(@new_error)
+        failure = default_breaker.most_recent_failure
+        expect(failure).to be_a SwitchGear::CircuitBreaker::Failure
+      end
+    end
+    context "#failures" do
+      it "returns a list of failures" do
+        allow(client).to receive(:llen).with(fail_namespace).and_return(1)
+        expect(client).to receive(:lrange).with(fail_namespace, 0, -1).and_return([@new_error])
+        failures = default_breaker.failures
+        expect(failures).to be_a Array
+        expect(failures.all? { |f| f.is_a?(SwitchGear::CircuitBreaker::Failure) }).to eq true
+      end
     end
   end
   describe 'defaults' do
@@ -78,8 +94,10 @@ describe SwitchGear::CircuitBreaker::Redis do
       expect(breaker.closed?).to eq true
     end
     it 'failures if not present in redis' do
-      expect(client).to receive(:del).exactly(2).with(fail_namespace)
-      expect(client).to receive(:smembers).exactly(2).with(fail_namespace).and_return(nil)
+      expect(client).to receive(:del).exactly(1).with(fail_namespace)
+      # redis by default returns 0 for keys even if they don't exist
+      expect(client).to receive(:llen).exactly(2).with(fail_namespace).and_return(0)
+      expect(client).to_not receive(:lrange)
       expect(breaker.failure_count).to eq 0
       expect(breaker.failures).to eq []
     end

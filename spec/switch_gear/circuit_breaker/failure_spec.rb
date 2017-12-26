@@ -17,7 +17,7 @@ describe SwitchGear::CircuitBreaker::Failure do
       {
         error: error.class,
         message: error.message,
-        timestamp: time.to_s
+        timestamp: time.to_i
       }.to_json
     end
     before(:each) do

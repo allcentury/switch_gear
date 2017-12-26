@@ -16,6 +16,11 @@ module SwitchGear
       do_run(args, &circuit)
     end
 
+    # @return most recent failure [SwitchGear::CircuitBreaker::Failure]
+    def most_recent_failure
+      failures.last
+    end
+
     # @return [Integer] The count of current failures
     def failure_count
       failures.size
@@ -79,13 +84,13 @@ module SwitchGear
 
     def check_reset_timeout
       return if !open?
-      if reset_period_lapsed?
+      if failure_count == 0 || reset_period_lapsed?
         self.state = :half_open
       end
     end
 
     def reset_period_lapsed?
-      (Time.now.utc - failures.last.timestamp) > reset_timeout
+      (Time.now.utc - most_recent_failure.timestamp) > reset_timeout
     end
 
     def reset_failures
@@ -98,7 +103,7 @@ module SwitchGear
       failure = Failure.new(e)
       add_failure(failure)
       logger.warn failure.to_s
-      if half_open? || failures.size >= failure_limit
+      if half_open? || failure_count >= failure_limit
         self.state = :open
       else
         self.state = :closed

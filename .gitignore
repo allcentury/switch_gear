@@ -10,3 +10,4 @@
 .ruby-version
 Gemfile.lock
 *.swp
+tags
