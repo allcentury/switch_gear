@@ -64,7 +64,7 @@ I, [2017-02-12T20:49:17.380771 #85900]  INFO -- : Success! getting tweets for st
 I, [2017-02-12T20:49:17.380865 #85900]  INFO -- : Circuit closed
 ```
 
-Notice that we had two failures in a row for joe and jane.  The circuit breaker was configured to only allow for 2 failures via the `failuire_limit` method.  If another call comes in after two failures, it will raise a `SwitchGear::CircuitBreaker::OpenError` error.  The only way the circuit breaker will be closed again is if the `reset_timeout` period has lapsed.  In our loop we catch the `SwitchGear::CircuitBreaker::OpenError` exception and sleep (don't sleep in production - this is just an example) to allow the Circuit to close.  You can see the timestamp of this log,
+Notice that we had two failures in a row for joe and jane.  The circuit breaker was configured to only allow for 2 failures via the `failuire_limit` method.  If another call comes in after two failures, it will raise a `SwitchGear::CircuitBreaker::OpenError` error.  The only way the circuit breaker will be closed again is if the `reset_timeout` period has lapsed.  In our loop we catch the `SwitchGear::CircuitBreaker::OpenError` exception and sleep to allow the Circuit to close.  You can see the timestamp of this log,
 
 ```
 I, [2017-02-12T20:49:17.380771 #85900]  INFO -- : Success! getting tweets for steve
@@ -112,10 +112,9 @@ I've [written a middleware](https://github.com/allcentury/switch_gear_sidekiq-mi
 
 ## Forthcoming
 
-1. A middleware in Sidekiq using this gem
-2. Better in memory support for async tasks
-3. More examples
-4. More documentation
+1. Better in memory support for async tasks
+2. More examples
+3. More documentation
 
 
 ## Development
