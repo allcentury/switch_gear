@@ -78,7 +78,7 @@ In an distributed environment the in memory solution of the circuit breaker crea
 
 You can visualize a few servers that were originally in a closed state moving to open upon failures as such:
 
-![img](https://s3.postimg.org/stxckap03/ezgif_com_video_to_gif.gif)
+![remote failure image]('./remote-loop.gif')
 
 You can set up the `CircuitBreaker` to use the redis adapter like this:
 
